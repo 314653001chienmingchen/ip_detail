@@ -19,6 +19,7 @@
     --c-link:#A48CF0;   /* link */
     --c-neigh:#63D890;  /* neigh */
     --c-bridge:#E8799E; /* bridge / switch */
+    --c-bond:#6FA8E8;   /* bonding / lacp */
     --warn:#E8A33D;
 
     --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
@@ -465,6 +466,7 @@
     font-size:13.5px;
     padding:13px 16px;
     color:var(--text);
+    white-space:pre-line;
   }
   .cmd-code .p{color:var(--muted-2);}
   .cmd-code .flag{color:var(--warn);}
@@ -595,6 +597,7 @@
       <a href="#link">網卡管理</a>
       <a href="#neigh">ARP / Neighbor</a>
       <a href="#bridge">交換器 / 橋接器</a>
+      <a href="#switch-adv">交換器進階功能</a>
       <a href="#recommend">推薦查看方式</a>
       <a href="#quick">常用快捷指令</a>
       <a href="#legacy">舊指令對照</a>
@@ -607,6 +610,7 @@
       <span><i style="background:var(--c-link)"></i>link — 網卡</span>
       <span><i style="background:var(--c-neigh)"></i>neigh — ARP</span>
       <span><i style="background:var(--c-bridge)"></i>bridge — 交換器</span>
+      <span><i style="background:var(--c-bond)"></i>bond — 網卡聚合</span>
     </div>
   </aside>
 
@@ -798,6 +802,30 @@
         </div>
       </section>
 
+      <section id="switch-adv">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-bond)">06 · Advanced</p>
+          <h2>交換器進階功能</h2>
+          <p class="sec-sub">機房 / 企業網路常見的四個進階設定：網卡聚合、Trunk／Access Port、流量鏡像、STP 調校。</p>
+        </div>
+
+        <h3 class="sub-h">網卡聚合（Bonding / LACP）</h3>
+        <p class="sub-p">把兩張以上實體網卡「捆」成一個邏輯介面，接到交換器上支援 LACP 的同一組 port，達到<b>頻寬加倍</b>或<b>故障備援</b>。這在實體交換器上要對應設定 <b>Port Channel / LAG</b>，兩端設定要匹配。</p>
+        <div id="bond-cmds"></div>
+
+        <h3 class="sub-h">Trunk 與 Access Port（VLAN Filtering）</h3>
+        <p class="sub-p">橋接器預設不分 VLAN。打開 VLAN filtering 後，可以把某張網卡設成 <b>Access Port</b>（只走一個 VLAN，untagged，給終端設備用）或 <b>Trunk Port</b>（允許多個 VLAN 通過，give tag，給交換器之間互連或虛擬機主機用）。</p>
+        <div id="vlanfilter-cmds"></div>
+
+        <h3 class="sub-h">流量鏡像（Port Mirroring）</h3>
+        <p class="sub-p">把某個 port 的封包複製一份送到另一個監控 port，方便用 Wireshark 之類的工具側錄流量，除錯或做入侵偵測時常用。Linux 用 <span class="code-inline">tc</span>（traffic control）的 <span class="code-inline">mirred</span> action 達成。</p>
+        <div id="mirror-cmds"></div>
+
+        <h3 class="sub-h">STP 進階調校</h3>
+        <p class="sub-p">多台交換器 / 橋接器互連時，靠 STP 選出一個 <b>Root Bridge</b> 並關閉多餘路徑防止迴圈。<b>priority 數字越小，越優先當選 Root Bridge。</b></p>
+        <div id="stpadv-cmds"></div>
+      </section>
+
       <section id="recommend">
         <div class="sec-head">
           <p class="eyebrow">Tip</p>
@@ -922,6 +950,41 @@ const sections = {
       { label: '建立 VLAN 子介面', code: `sudo ip link add link eth0 name eth0.<span class="flag">10</span> type vlan id <span class="flag">10</span>` },
       { label: '查看橋接器上的 VLAN 設定', code: `bridge vlan show` },
       { label: '開啟 STP（生成樹協定，防止迴圈）', code: `sudo ip link set br0 type bridge stp_state <span class="flag">1</span>` },
+    ]
+  },
+  bond: {
+    color: 'var(--c-bond)',
+    items: [
+      { label: '建立 Bond 介面（LACP 模式）', code: `sudo ip link add bond0 type bond mode <span class="flag">802.3ad</span>` },
+      { label: '設定 LACP 傳送速率', code: `sudo ip link set bond0 type bond lacp_rate <span class="flag">fast</span>` },
+      { label: '把網卡加入 Bond', code: `sudo ip link set eth0 master bond0\nsudo ip link set eth1 master bond0` },
+      { label: '啟用 Bond 介面', code: `sudo ip link set bond0 <span class="flag">up</span>` },
+      { label: '查看 Bond 詳細狀態', code: `ip -d link show bond0` },
+    ]
+  },
+  vlanfilter: {
+    color: 'var(--c-bridge)',
+    items: [
+      { label: '啟用橋接器的 VLAN 過濾功能', code: `sudo ip link set br0 type bridge vlan_filtering <span class="flag">1</span>` },
+      { label: '設定 Access Port（單一 VLAN，untagged）', code: `sudo bridge vlan add dev eth0 vid <span class="flag">10</span> pvid untagged` },
+      { label: '設定 Trunk Port（允許多個 VLAN 通過）', code: `sudo bridge vlan add dev eth1 vid <span class="flag">10</span>\nsudo bridge vlan add dev eth1 vid <span class="flag">20</span>` },
+      { label: '移除某網卡上的 VLAN 設定', code: `sudo bridge vlan del dev eth0 vid <span class="flag">10</span>` },
+    ]
+  },
+  mirror: {
+    color: 'var(--c-link)',
+    items: [
+      { label: '在來源網卡建立 ingress qdisc', code: `sudo tc qdisc add dev eth0 ingress` },
+      { label: '把 eth0 的流量鏡像到 eth2', code: `sudo tc filter add dev eth0 parent ffff: protocol all u32 match u32 0 0 action mirred egress mirror dev <span class="flag">eth2</span>` },
+      { label: '移除鏡像規則', code: `sudo tc qdisc del dev eth0 ingress` },
+    ]
+  },
+  stpadv: {
+    color: 'var(--c-neigh)',
+    items: [
+      { label: '設定橋接器優先權（數字越小越優先當 Root）', code: `sudo ip link set br0 type bridge priority <span class="flag">4096</span>` },
+      { label: '設定某網卡的 STP 路徑成本', code: `sudo ip link set eth0 type bridge_slave cost <span class="flag">100</span>` },
+      { label: '查看目前 STP 狀態', code: `bridge -d link show` },
     ]
   }
 };
