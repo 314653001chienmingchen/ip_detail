@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>虛擬終端機 — 真實 Linux VM（v86）</title>
+<style>
+  :root{
+    --bg:#0B1015;
+    --panel:#121A21;
+    --panel-2:#0E151B;
+    --line:#20303A;
+    --text:#DCE5EC;
+    --muted:#7C8C99;
+    --muted-2:#54636F;
+    --c-addr:#5FD0E0;
+    --c-route:#E8A33D;
+    --c-neigh:#63D890;
+    --err:#E06666;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:32px 24px 80px;}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+  .brand{font-family:var(--mono);font-size:20px;font-weight:700;}
+  .brand span{color:var(--c-route);}
+  .back-link{
+    font-family:var(--mono);font-size:12.5px;color:var(--muted);
+    text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:7px 12px;
+  }
+  .back-link:hover{color:var(--text);border-color:var(--muted);}
+
+  .kicker{font-family:var(--mono);font-size:12px;color:var(--c-route);letter-spacing:0.1em;text-transform:uppercase;margin:0 0 8px;}
+  h1{font-size:26px;margin:0 0 8px;letter-spacing:-0.01em;}
+  .lede{color:var(--muted);font-size:14.5px;max-width:64ch;margin:0 0 24px;}
+
+  .notice{
+    background:linear-gradient(135deg, rgba(232,163,61,0.09), rgba(232,163,61,0.02));
+    border:1px solid rgba(232,163,61,0.35);
+    border-radius:10px;
+    padding:16px 18px;
+    font-size:13.5px;
+    color:var(--muted);
+    margin-bottom:24px;
+  }
+  .notice b{color:var(--text);}
+
+  details{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    margin-bottom:20px;
+    overflow:hidden;
+  }
+  summary{
+    cursor:pointer;
+    padding:14px 16px;
+    font-weight:600;
+    font-size:14px;
+    background:var(--panel-2);
+    list-style:none;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::before{content:"▸ ";color:var(--c-route);}
+  details[open] summary::before{content:"▾ ";}
+  .details-body{padding:16px 18px;font-size:13.5px;color:var(--muted);}
+  .details-body ol{padding-left:20px;margin:0;}
+  .details-body li{margin-bottom:10px;}
+  .details-body code{
+    font-family:var(--mono);
+    color:var(--c-addr);
+    background:rgba(95,208,224,0.08);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:0.92em;
+  }
+  .details-body pre{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:12px 14px;
+    overflow-x:auto;
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text);
+    white-space:pre;
+  }
+  .details-body a{color:var(--c-addr);}
+
+  .screen-frame{
+    background:#000;
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,0.6);
+    position:relative;
+  }
+  .screen-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:11.5px;color:var(--muted-2);
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted-2);}
+  .screen-bar .status{margin-left:auto;display:flex;align-items:center;gap:6px;}
+  .status .dot.ready{background:var(--c-neigh);}
+  .status .dot.loading{background:var(--c-route);animation:pulse 1s infinite;}
+  .status .dot.error{background:var(--err);}
+  @keyframes pulse{50%{opacity:0.3;}}
+
+  #screen_container{
+    width:100%;
+    min-height:400px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#000;
+  }
+  #screen_container canvas{display:block;max-width:100%;}
+  #screen_container .text-layer{white-space:pre;font-family:monospace;color:#ccc;}
+
+  .overlay-msg{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:rgba(11,16,21,0.92);
+    text-align:center;padding:24px;
+  }
+  .overlay-msg.hidden{display:none;}
+  .overlay-msg p{margin:0;color:var(--muted);font-size:13.5px;max-width:44ch;}
+  .overlay-msg .big{font-family:var(--mono);font-size:14px;color:var(--text);font-weight:700;}
+  .overlay-msg .err{color:var(--err);}
+  .spinner{
+    width:24px;height:24px;border-radius:50%;
+    border:3px solid var(--line);border-top-color:var(--c-route);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .controls{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--mono);font-size:12.5px;color:var(--text);
+    background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    padding:8px 14px;cursor:pointer;
+  }
+  .btn:hover{border-color:var(--muted);}
+
+  .try-box{
+    margin-top:26px;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:16px 18px;
+  }
+  .try-box h3{margin:0 0 10px;font-size:14.5px;}
+  .try-box ul{margin:0;padding-left:18px;font-size:13px;color:var(--muted);}
+  .try-box code{font-family:var(--mono);color:var(--c-addr);}
+  .try-box li{margin-bottom:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">虛擬終端機<span>.</span></div>
+    <a class="back-link" href="ip.html">← 回到 ip 指令參考</a>
+  </header>
+
+  <p class="kicker">v86 · 瀏覽器內的真實 Linux</p>
+  <h1>在瀏覽器裡開一台真的 Linux</h1>
+  <p class="lede">這頁用 <b style="color:var(--text)">v86</b>（WebAssembly x86 模擬器）在瀏覽器裡直接跑一顆精簡 Linux 核心，你可以打真正的 <code style="font-family:var(--mono)">ip</code> 指令、看真正的核心回應，不是模擬假輸出。</p>
+
+  <div class="notice">
+    <b>部署前必讀：</b>這個頁面本身不含 Linux 系統檔案（BIOS、核心映像檔約 10MB），需要照下面「部署步驟」自行下載並放進對應資料夾，否則畫面只會停在「載入中」或顯示錯誤。點開下方説明展開步驟。
+  </div>
+
+  <details>
+    <summary>部署步驟（第一次設定，約 10 分鐘）</summary>
+    <div class="details-body">
+      <ol>
+        <li>
+          在 <code>terminal.html</code> 同一層資料夾裡，建立一個 <code>v86/</code> 子資料夾，資料夾結構最後要長這樣：
+          <pre>ip-guide/
+├── index.html
+├── terminal.html
+└── v86/
+    ├── libv86.js
+    ├── v86.wasm
+    ├── seabios.bin
+    ├── vgabios.bin
+    └── buildroot-bzimage68.bin</pre>
+        </li>
+        <li>
+          到 v86 官方 GitHub Releases 下載 <code>libv86.js</code> 與 <code>v86.wasm</code>：<br>
+          <a href="https://github.com/copy/v86/releases" target="_blank" rel="noopener">github.com/copy/v86/releases</a>（下載最新版 release 裡附的 build 檔案）。
+        </li>
+        <li>
+          BIOS 檔案（<code>seabios.bin</code>、<code>vgabios.bin</code>）在 v86 專案原始碼的 <code>bios/</code> 資料夾裡，一併從同一個 release 或原始碼取得。
+        </li>
+        <li>
+          下載一顆精簡 Linux 核心映像（Buildroot，內建 BusyBox，含基本 <code>ip</code> 指令）：
+          <pre>curl -O https://i.copy.sh/buildroot-bzimage68.bin</pre>
+          放進 <code>v86/</code> 資料夾裡。
+        </li>
+        <li>
+          本機測試：不能直接雙擊開啟 HTML（瀏覽器會擋掉檔案讀取），要用簡單的本機伺服器跑：
+          <pre>cd ip-guide
+python3 -m http.server 8000</pre>
+          瀏覽器打開 <code>http://localhost:8000/terminal.html</code>。
+        </li>
+        <li>
+          確認能開機、能打指令之後，把整個 <code>ip-guide/</code> 資料夾（含 <code>v86/</code>）一起上傳到 GitHub Pages / Netlify 之類的靜態空間，就完成部署了。
+        </li>
+        <li>
+          <b style="color:var(--text)">想要完整的 <code>bridge</code> / <code>tc</code> 指令？</b> Buildroot 內建的是 BusyBox 版 <code>ip</code>，功能較陽春。如果想要本網站教的橋接器、VLAN、tc 鏡像都能實測，改用 Alpine Linux 映像開機，進去後執行 <code>apk add iproute2 bridge iproute2-tc</code> 安裝完整工具即可，作法可參考 v86 官方文件的「Alpine Linux guest setup」。
+        </li>
+      </ol>
+    </div>
+  </details>
+
+  <div class="screen-frame">
+    <div class="screen-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span>v86 · buildroot linux</span>
+      <span class="status"><span class="dot loading" id="statusDot"></span><span id="statusText">尚未啟動</span></span>
+    </div>
+    <div id="screen_container">
+      <div class="overlay-msg" id="overlay">
+        <div class="spinner" id="spinner"></div>
+        <p class="big" id="overlayTitle">準備啟動虛擬機…</p>
+        <p id="overlayDesc">如果卡在這裡超過幾秒，代表 v86 資源檔還沒放好，請展開上方「部署步驟」檢查。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="startBtn">啟動虛擬機</button>
+    <button class="btn" id="restartBtn">重新開機</button>
+  </div>
+
+  <div class="try-box">
+    <h3>開機後可以試試看</h3>
+    <ul>
+      <li><code>ip a</code> — 查看目前的網路介面</li>
+      <li><code>ip addr add 192.168.1.100/24 dev eth0</code> — 加一個 IP</li>
+      <li><code>ip link set eth0 up</code> / <code>down</code> — 啟用 / 停用網卡</li>
+      <li><code>ip route</code> — 查看路由表</li>
+      <li>這是真的核心，沒有連到外部網路，所有操作都只影響這台虛擬機自己的狀態，可以放心亂試、亂改。</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayDesc = document.getElementById('overlayDesc');
+  const spinner = document.getElementById('spinner');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  let emulator = null;
+
+  function setStatus(state, text){
+    statusDot.className = 'dot ' + state;
+    statusText.textContent = text;
+  }
+
+  function showOverlay(title, desc, isError){
+    overlay.classList.remove('hidden');
+    overlayTitle.textContent = title;
+    overlayDesc.textContent = desc || '';
+    overlayTitle.classList.toggle('err', !!isError);
+    spinner.style.display = isError ? 'none' : 'block';
+  }
+
+  function hideOverlay(){
+    overlay.classList.add('hidden');
+  }
+
+  function bootVM(){
+    if (typeof V86 === 'undefined'){
+      setStatus('error', '載入失敗');
+      showOverlay(
+        '找不到 v86 函式庫',
+        '請確認 v86/libv86.js 已經放在正確路徑，並展開上方「部署步驟」檢查資料夾結構。',
+        true
+      );
+      return;
+    }
+
+    setStatus('loading', '開機中…');
+    showOverlay('虛擬機開機中…', '第一次開機會需要載入核心映像檔，依網路速度可能要幾秒到十幾秒。');
+
+    try {
+      emulator = new V86({
+        wasm_path: './v86/v86.wasm',
+        screen_container: document.getElementById('screen_container'),
+        bios: { url: './v86/seabios.bin' },
+        vga_bios: { url: './v86/vgabios.bin' },
+        bzimage: { url: './v86/buildroot-bzimage68.bin' },
+        cmdline: 'tsc=reliable mitigations=off random.trust_cpu=on',
+        autostart: true,
+        memory_size: 64 * 1024 * 1024,
+        vga_memory_size: 2 * 1024 * 1024,
+      });
+
+      emulator.add_listener('emulator-ready', () => {
+        setStatus('ready', '運作中');
+        hideOverlay();
+      });
+
+    } catch (e){
+      setStatus('error', '啟動失敗');
+      showOverlay('虛擬機啟動失敗', String(e && e.message ? e.message : e), true);
+    }
+  }
+
+  startBtn.addEventListener('click', () => {
+    if (emulator){ return; }
+    bootVM();
+  });
+
+  restartBtn.addEventListener('click', () => {
+    if (emulator && emulator.restart){
+      emulator.restart();
+      setStatus('loading', '重新開機中…');
+    } else {
+      bootVM();
+    }
+  });
+</script>
+
+<script src="./v86/libv86.js" onerror="
+  document.getElementById('statusDot').className = 'dot error';
+  document.getElementById('statusText').textContent = '載入失敗';
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('overlayTitle').textContent = '找不到 v86/libv86.js';
+  document.getElementById('overlayTitle').classList.add('err');
+  document.getElementById('overlayDesc').textContent = '請依照上方「部署步驟」下載 v86 檔案並放進 v86/ 資料夾。';
+  document.getElementById('spinner').style.display = 'none';
+"></script>
+</body>
+</html>
