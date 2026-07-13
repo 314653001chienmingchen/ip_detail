@@ -40,6 +40,32 @@
 
   a{color:inherit;}
 
+  /* ---------- progress bar ---------- */
+  .progress-bar{
+    position:fixed;
+    top:0;left:0;
+    height:3px;
+    width:0%;
+    background:linear-gradient(90deg, var(--c-addr), var(--c-route));
+    z-index:200;
+    transition:width .08s linear;
+  }
+
+  /* ---------- mobile menu toggle ---------- */
+  .menu-toggle{
+    display:none;
+    width:36px;height:36px;
+    align-items:center;
+    justify-content:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+    flex:0 0 auto;
+    color:var(--text);
+  }
+  .menu-toggle svg{width:18px;height:18px;}
+
   /* ---------- layout ---------- */
   .shell{
     display:grid;
@@ -63,19 +89,47 @@
   }
   @media (max-width:900px){
     .side{
-      position:relative;
+      position:sticky;
+      top:0;
       height:auto;
       display:flex;
       align-items:center;
-      gap:18px;
-      padding:16px 18px;
-      overflow-x:auto;
+      gap:12px;
+      padding:14px 18px;
+      overflow:visible;
       border-right:none;
       border-bottom:1px solid var(--line);
+      z-index:80;
     }
-    .side .brand{margin:0;flex:0 0 auto;}
-    .side nav{display:flex;gap:4px;margin-top:0;}
-    .side nav a{white-space:nowrap;}
+    .side .brand{margin:0;flex:1 1 auto;}
+    .side .brand b{font-size:22px;}
+    .menu-toggle{display:flex;}
+    .side nav{
+      position:fixed;
+      inset:0;
+      top:61px;
+      background:var(--bg);
+      flex-direction:column;
+      gap:2px;
+      margin-top:0;
+      padding:10px 18px 40px;
+      transform:translateY(-8px);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+      overflow-y:auto;
+      z-index:70;
+    }
+    .side nav.open{opacity:1;transform:translateY(0);pointer-events:auto;}
+    .side nav a{
+      white-space:normal;
+      font-size:15.5px;
+      padding:14px 12px;
+      border-bottom:1px solid var(--line);
+      border-left:2px solid transparent;
+      border-radius:0;
+    }
+    .side nav a.active{background:rgba(232,163,61,0.08);}
     .side .legend{display:none;}
   }
 
@@ -443,6 +497,7 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
+    gap:12px;
     padding:10px 14px;
     border-bottom:1px solid var(--line);
     background:var(--panel-2);
@@ -457,6 +512,7 @@
     padding:4px 9px;
     border-radius:5px;
     cursor:pointer;
+    flex:0 0 auto;
     transition:color .15s,border-color .15s;
   }
   .copy-btn:hover{color:var(--text);border-color:var(--muted);}
@@ -581,13 +637,44 @@
     font-size:11.5px;
     color:var(--muted-2);
   }
+
+  /* ---------- qr share ---------- */
+  .qr-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px;
+  }
+  .qr-hint{
+    font-size:12px;
+    color:var(--muted-2);
+    margin:10px 0 0;
+  }
+  .qrcode-box{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:60px;
+    padding:0;
+    margin-top:16px;
+  }
+  .qrcode-box:not(:empty){
+    background:#fff;
+    padding:18px;
+    border-radius:10px;
+  }
+  .qrcode-box img{display:block;}
 </style>
 </head>
 <body>
+<div class="progress-bar" id="progressBar"></div>
 
 <div class="shell">
   <aside class="side">
     <div class="brand">iproute2 速查<b>ip<span class="dot">.</span></b></div>
+    <button class="menu-toggle" id="menuToggle" aria-label="開啟選單">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
     <nav id="nav">
       <a href="#hero-sec">簡介</a>
       <a href="#calc">IP 位址計算</a>
@@ -603,6 +690,7 @@
       <a href="#legacy">舊指令對照</a>
       <a href="#must">必背指令</a>
       <a href="#exam">考試重點</a>
+      <a href="#share">分享 / QR Code</a>
     </nav>
     <div class="legend">
       <span><i style="background:var(--c-addr)"></i>address — IP 位址</span>
@@ -896,12 +984,29 @@
         <div class="points" id="points"></div>
       </section>
 
+      <section id="share">
+        <div class="sec-head">
+          <p class="eyebrow">Share</p>
+          <h2>分享 / QR Code</h2>
+          <p class="sec-sub">把這個網站部署到網路上（例如 GitHub Pages）之後，貼上網址就能產生 QR Code，掃描後直接在手機上打開，方便隨手複習。</p>
+        </div>
+        <div class="qr-card">
+          <div class="calc-inputrow">
+            <input id="qr-url" class="calc-input" type="text" placeholder="貼上部署後的網址，例如 https://you.github.io/ip-guide/" spellcheck="false">
+            <button id="qr-btn" class="calc-btn">產生 QR Code</button>
+          </div>
+          <p id="qr-hint" class="qr-hint"></p>
+          <div id="qrcode-box" class="qrcode-box"></div>
+        </div>
+      </section>
+
     </div>
 
     <footer>iproute2 · ip a / ip r / ip l / ip n</footer>
   </main>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // ---------- data ----------
 const sections = {
@@ -1176,6 +1281,59 @@ const io = new IntersectionObserver((entries) => {
   });
 }, { rootMargin: '-20% 0px -70% 0px' });
 targets.forEach(t => t && io.observe(t));
+
+// ---------- mobile menu toggle ----------
+const menuToggle = document.getElementById('menuToggle');
+const sideNav = document.getElementById('nav');
+menuToggle.addEventListener('click', () => sideNav.classList.toggle('open'));
+navLinks.forEach(a => a.addEventListener('click', () => sideNav.classList.remove('open')));
+
+// ---------- scroll progress bar ----------
+const progressBar = document.getElementById('progressBar');
+function updateProgress(){
+  const el = document.documentElement;
+  const scrollTop = el.scrollTop || document.body.scrollTop;
+  const scrollHeight = (el.scrollHeight || document.body.scrollHeight) - el.clientHeight;
+  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  progressBar.style.width = pct + '%';
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
+
+// ---------- qr code share ----------
+const qrUrlInput = document.getElementById('qr-url');
+const qrBtn = document.getElementById('qr-btn');
+const qrBox = document.getElementById('qrcode-box');
+const qrHint = document.getElementById('qr-hint');
+
+if (location.protocol.startsWith('http')){
+  qrUrlInput.value = location.href;
+}
+
+function generateQR(){
+  qrBox.innerHTML = '';
+  qrHint.textContent = '';
+  const url = qrUrlInput.value.trim();
+  if (!url){
+    qrHint.textContent = '請先輸入網址';
+    return;
+  }
+  try {
+    new QRCode(qrBox, {
+      text: url,
+      width: 168,
+      height: 168,
+      colorDark: '#0B1015',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (e){
+    qrHint.textContent = 'QR Code 產生失敗，請確認網址格式';
+  }
+}
+qrBtn.addEventListener('click', generateQR);
+qrUrlInput.addEventListener('keydown', e => { if (e.key === 'Enter') generateQR(); });
+if (qrUrlInput.value) generateQR();
 </script>
 </body>
 </html>
