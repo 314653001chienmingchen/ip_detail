@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ip — Linux 網路指揮台</title>
+<style>
+  :root{
+    --bg:#0B1015;
+    --panel:#121A21;
+    --panel-2:#0E151B;
+    --line:#20303A;
+    --text:#DCE5EC;
+    --muted:#7C8C99;
+    --muted-2:#54636F;
+
+    --c-addr:#5FD0E0;   /* address */
+    --c-route:#E8A33D;  /* route */
+    --c-link:#A48CF0;   /* link */
+    --c-neigh:#63D890;  /* neigh */
+    --warn:#E8A33D;
+
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--c-route);color:#0B1015;}
+
+  a{color:inherit;}
+
+  /* ---------- layout ---------- */
+  .shell{
+    display:grid;
+    grid-template-columns:236px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width:900px){
+    .shell{grid-template-columns:1fr;}
+  }
+
+  /* ---------- sidebar ---------- */
+  .side{
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    padding:28px 20px;
+    border-right:1px solid var(--line);
+    background:var(--panel-2);
+  }
+  @media (max-width:900px){
+    .side{
+      position:relative;
+      height:auto;
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:16px 18px;
+      overflow-x:auto;
+      border-right:none;
+      border-bottom:1px solid var(--line);
+    }
+    .side .brand{margin:0;flex:0 0 auto;}
+    .side nav{display:flex;gap:4px;margin-top:0;}
+    .side nav a{white-space:nowrap;}
+    .side .legend{display:none;}
+  }
+
+  .brand{
+    font-family:var(--mono);
+    font-size:15px;
+    letter-spacing:0.02em;
+    color:var(--muted);
+    margin-bottom:26px;
+  }
+  .brand b{
+    display:block;
+    font-size:34px;
+    color:var(--text);
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .brand .dot{color:var(--c-route);}
+
+  .side nav{display:flex;flex-direction:column;gap:2px;margin-top:8px;}
+  .side nav a{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--muted);
+    text-decoration:none;
+    padding:7px 10px;
+    border-radius:6px;
+    border-left:2px solid transparent;
+    transition:color .15s, border-color .15s, background .15s;
+  }
+  .side nav a:hover{color:var(--text);background:rgba(255,255,255,0.03);}
+  .side nav a.active{
+    color:var(--text);
+    border-left-color:var(--c-route);
+    background:rgba(232,163,61,0.08);
+  }
+
+  .legend{
+    margin-top:32px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted-2);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .legend span{display:flex;align-items:center;gap:8px;}
+  .legend i{width:8px;height:8px;border-radius:2px;display:inline-block;flex:0 0 auto;}
+
+  /* ---------- main ---------- */
+  main{padding:0;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 32px 120px;}
+  @media (max-width:600px){.wrap{padding:0 18px 90px;}}
+
+  section{scroll-margin-top:24px;}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  h2{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0 0 6px;
+  }
+  .sec-sub{color:var(--muted);font-size:14.5px;margin:0 0 26px;max-width:56ch;}
+  .sec-head{padding:64px 0 4px;}
+  .sec-head:first-of-type{padding-top:56px;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:72px 32px 40px;
+    max-width:880px;
+    margin:0 auto;
+  }
+  @media (max-width:600px){.hero{padding:44px 18px 30px;}}
+  .kicker{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--c-route);
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin:0 0 16px;
+  }
+  h1{
+    font-size:clamp(30px,5vw,46px);
+    line-height:1.15;
+    letter-spacing:-0.02em;
+    margin:0 0 18px;
+    max-width:16ch;
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--c-route);
+  }
+  .hero p.lede{
+    color:var(--muted);
+    font-size:16px;
+    max-width:58ch;
+    margin:0 0 34px;
+  }
+  .hero p.lede b{color:var(--text);font-weight:600;}
+
+  /* terminal */
+  .term{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,0.6);
+    position:relative;
+  }
+  .term::after{
+    content:"";
+    position:absolute;inset:0;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode:overlay;
+  }
+  .term-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted-2);
+    background:var(--panel-2);
+  }
+  .term-bar .tag{
+    margin-left:auto;
+    color:var(--muted-2);
+  }
+  .term-body{
+    padding:20px 18px 26px;
+    font-family:var(--mono);
+    font-size:13.5px;
+    min-height:172px;
+  }
+  .term-line{display:flex;gap:8px;}
+  .prompt{color:var(--c-neigh);flex:0 0 auto;}
+  .cmd-typed{color:var(--text);font-weight:600;}
+  .cursor{
+    display:inline-block;width:7px;height:15px;
+    background:var(--c-route);
+    margin-left:2px;
+    vertical-align:-2px;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+  .out{color:var(--muted);white-space:pre-wrap;margin-top:10px;opacity:0;transform:translateY(4px);transition:opacity .4s, transform .4s;}
+  .out.show{opacity:1;transform:translateY(0);}
+  .out .if{color:var(--c-link);}
+  .out .up{color:var(--c-neigh);}
+  .out .ip{color:var(--c-addr);}
+
+  @media (prefers-reduced-motion: reduce){
+    .cursor{animation:none;}
+    .out{transition:none;}
+  }
+
+  /* ---------- object cards ---------- */
+  .obj-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-bottom:8px;
+  }
+  @media (max-width:600px){.obj-grid{grid-template-columns:1fr;}}
+  .obj-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--c);
+    border-radius:8px;
+    padding:16px 18px;
+  }
+  .obj-card .name{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:15px;
+    color:var(--c);
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+  }
+  .obj-card .name .abbr{
+    font-size:11px;
+    color:var(--muted-2);
+    font-weight:400;
+    border:1px solid var(--line);
+    padding:1px 6px;
+    border-radius:4px;
+  }
+  .obj-card p{margin:8px 0 0;font-size:13.5px;color:var(--muted);}
+
+  /* ---------- command blocks ---------- */
+  .cmd-block{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--c, var(--line));
+    border-radius:8px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .cmd-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel-2);
+  }
+  .cmd-label{font-size:13px;color:var(--text);font-weight:600;}
+  .copy-btn{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    background:transparent;
+    border:1px solid var(--line);
+    padding:4px 9px;
+    border-radius:5px;
+    cursor:pointer;
+    transition:color .15s,border-color .15s;
+  }
+  .copy-btn:hover{color:var(--text);border-color:var(--muted);}
+  .copy-btn.copied{color:var(--c-neigh);border-color:var(--c-neigh);}
+  .cmd-code{
+    font-family:var(--mono);
+    font-size:13.5px;
+    padding:13px 16px;
+    color:var(--text);
+  }
+  .cmd-code .p{color:var(--muted-2);}
+  .cmd-code .flag{color:var(--warn);}
+
+  /* ---------- callout ---------- */
+  .callout{
+    background:linear-gradient(135deg, rgba(232,163,61,0.09), rgba(232,163,61,0.02));
+    border:1px solid rgba(232,163,61,0.35);
+    border-radius:10px;
+    padding:20px 22px;
+    margin:20px 0 8px;
+  }
+  .callout .cmd-code{padding:12px 0 0;background:transparent;}
+  .callout h3{margin:0 0 6px;font-size:16px;}
+  .callout p{margin:0;color:var(--muted);font-size:13.5px;}
+  .callout ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px;}
+  .callout li b{color:var(--text);}
+
+  /* ---------- tables ---------- */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  thead th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    padding:10px 14px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+  }
+  tbody td{
+    padding:11px 14px;
+    border-bottom:1px solid var(--line);
+    color:var(--muted);
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td.code{font-family:var(--mono);color:var(--text);}
+  tbody td.arrow{color:var(--muted-2);width:24px;text-align:center;}
+
+  .table-wrap{margin-bottom:8px;overflow-x:auto;}
+
+  /* ---------- checklist ---------- */
+  .checklist{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .check-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:11px 14px;
+    cursor:pointer;
+    user-select:none;
+    transition:border-color .15s, opacity .15s;
+  }
+  .check-item:hover{border-color:var(--muted-2);}
+  .check-item .box{
+    width:16px;height:16px;flex:0 0 auto;
+    border:1.5px solid var(--muted-2);
+    border-radius:4px;
+    position:relative;
+    transition:background .15s,border-color .15s;
+  }
+  .check-item.on .box{background:var(--c-neigh);border-color:var(--c-neigh);}
+  .check-item.on .box::after{
+    content:"";
+    position:absolute;left:4px;top:1px;
+    width:4px;height:8px;
+    border:solid #0B1015;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+  .check-item.on span{color:var(--muted-2);text-decoration:line-through;}
+  .check-item span{font-family:var(--mono);font-size:13.5px;color:var(--text);}
+
+  /* ---------- exam points ---------- */
+  .points{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel);}
+  .point{
+    display:flex;
+    gap:14px;
+    padding:14px 16px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .point:last-child{border-bottom:none;}
+  .point .n{
+    font-family:var(--mono);
+    color:var(--c-route);
+    font-weight:700;
+    flex:0 0 auto;
+  }
+  .point b{color:var(--text);}
+  .point{color:var(--muted);}
+
+  footer{
+    text-align:center;
+    padding:40px 20px 60px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted-2);
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="side">
+    <div class="brand">iproute2 速查<b>ip<span class="dot">.</span></b></div>
+    <nav id="nav">
+      <a href="#hero-sec">簡介</a>
+      <a href="#objects">四大物件</a>
+      <a href="#addr">IP 位址管理</a>
+      <a href="#route">路由管理</a>
+      <a href="#link">網卡管理</a>
+      <a href="#neigh">ARP / Neighbor</a>
+      <a href="#recommend">推薦查看方式</a>
+      <a href="#quick">常用快捷指令</a>
+      <a href="#legacy">舊指令對照</a>
+      <a href="#must">必背指令</a>
+      <a href="#exam">考試重點</a>
+    </nav>
+    <div class="legend">
+      <span><i style="background:var(--c-addr)"></i>address — IP 位址</span>
+      <span><i style="background:var(--c-route)"></i>route — 路由</span>
+      <span><i style="background:var(--c-link)"></i>link — 網卡</span>
+      <span><i style="background:var(--c-neigh)"></i>neigh — ARP</span>
+    </div>
+  </aside>
+
+  <main>
+    <section class="hero" id="hero-sec">
+      <p class="kicker">iproute2 · Linux 網路管理</p>
+      <h1>一個指令，<em>取代</em> ifconfig、route、arp</h1>
+      <p class="lede"><b>ip</b> 是 <b>iproute2</b> 套件中的網路管理工具，統一管理 IP 位址、路由表、網卡與 ARP 快取——舊時代分散的三個指令，現在都收進同一支工具裡。</p>
+
+      <div class="term">
+        <div class="term-bar">
+          <span>root@server</span><span class="tag">bash</span>
+        </div>
+        <div class="term-body">
+          <div class="term-line">
+            <span class="prompt">$</span>
+            <span class="cmd-typed" id="typed"></span><span class="cursor" id="cursor"></span>
+          </div>
+          <div class="out" id="hero-out"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+
+      <section id="objects">
+        <div class="sec-head">
+          <p class="eyebrow">Object</p>
+          <h2>四大管理物件</h2>
+          <p class="sec-sub">語法固定為 <code style="font-family:var(--mono);color:var(--text)">ip [Object] [Command]</code>，先認識四個物件，後面的指令都是它們的延伸。</p>
+        </div>
+        <div class="obj-grid">
+          <div class="obj-card" style="--c:var(--c-addr)">
+            <div class="name">address <span class="abbr">簡寫 a</span></div>
+            <p>管理主機上的 IP 位址——新增、刪除、查看。</p>
+          </div>
+          <div class="obj-card" style="--c:var(--c-route)">
+            <div class="name">route <span class="abbr">簡寫 r</span></div>
+            <p>管理路由表，決定封包該往哪個閘道 / 介面送出。</p>
+          </div>
+          <div class="obj-card" style="--c:var(--c-link)">
+            <div class="name">link <span class="abbr">簡寫 l</span></div>
+            <p>管理網路卡（NIC）本身，例如啟用或停用介面。</p>
+          </div>
+          <div class="obj-card" style="--c:var(--c-neigh)">
+            <div class="name">neigh <span class="abbr">簡寫 n</span></div>
+            <p>管理 ARP / Neighbor Table，也就是 IP 對應 MAC 的快取。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="addr">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-addr)">01 · Address</p>
+          <h2>IP 位址管理</h2>
+          <p class="sec-sub">新增、刪除、查看主機介面上的 IP 位址。</p>
+        </div>
+        <div id="addr-cmds"></div>
+      </section>
+
+      <section id="route">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-route)">02 · Route</p>
+          <h2>路由管理</h2>
+          <p class="sec-sub">控制封包的下一步：預設閘道與靜態路由。</p>
+        </div>
+        <div id="route-cmds"></div>
+      </section>
+
+      <section id="link">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-link)">03 · Link</p>
+          <h2>網卡管理</h2>
+          <p class="sec-sub">查看、啟用、停用網路介面。</p>
+        </div>
+        <div id="link-cmds"></div>
+      </section>
+
+      <section id="neigh">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-neigh)">04 · Neigh</p>
+          <h2>ARP / Neighbor Table</h2>
+          <p class="sec-sub">查看區域網路中 IP 對應 MAC 的快取表。</p>
+        </div>
+        <div id="neigh-cmds"></div>
+      </section>
+
+      <section id="recommend">
+        <div class="sec-head">
+          <p class="eyebrow">Tip</p>
+          <h2>推薦查看方式</h2>
+        </div>
+        <div class="callout">
+          <h3>彩色 + 精簡輸出</h3>
+          <div class="cmd-code"><span class="p">$</span> ip <span class="flag">-c -br</span> a</div>
+          <ul>
+            <li><b>-c</b>　彩色顯示，介面狀態一眼可辨</li>
+            <li><b>-br</b>　簡潔模式（brief），每個介面一行</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="quick">
+        <div class="sec-head">
+          <p class="eyebrow">Cheatsheet</p>
+          <h2>常用快捷指令</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>指令</th><th>功能</th></tr></thead>
+            <tbody>
+              <tr><td class="code">ip a</td><td>查看 IP</td></tr>
+              <tr><td class="code">ip r</td><td>查看路由</td></tr>
+              <tr><td class="code">ip l</td><td>查看網卡</td></tr>
+              <tr><td class="code">ip n</td><td>查看 ARP</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="legacy">
+        <div class="sec-head">
+          <p class="eyebrow">Migration</p>
+          <h2>舊指令對照</h2>
+          <p class="sec-sub">習慣舊工具的人可以照這張表換腦袋。</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>舊工具</th><th></th><th>新工具</th></tr></thead>
+            <tbody>
+              <tr><td class="code">ifconfig</td><td class="arrow">→</td><td class="code">ip a</td></tr>
+              <tr><td class="code">route -n</td><td class="arrow">→</td><td class="code">ip r</td></tr>
+              <tr><td class="code">arp -a</td><td class="arrow">→</td><td class="code">ip n</td></tr>
+              <tr><td class="code">ifconfig eth0 up</td><td class="arrow">→</td><td class="code">ip link set eth0 up</td></tr>
+              <tr><td class="code">ifconfig eth0 down</td><td class="arrow">→</td><td class="code">ip link set eth0 down</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="must">
+        <div class="sec-head">
+          <p class="eyebrow">★★★★★</p>
+          <h2>必背指令</h2>
+          <p class="sec-sub">點一下打勾，複習到全部劃掉為止。</p>
+        </div>
+        <div class="checklist" id="checklist"></div>
+      </section>
+
+      <section id="exam">
+        <div class="sec-head">
+          <p class="eyebrow">Summary</p>
+          <h2>考試重點</h2>
+        </div>
+        <div class="points" id="points"></div>
+      </section>
+
+    </div>
+
+    <footer>iproute2 · ip a / ip r / ip l / ip n</footer>
+  </main>
+</div>
+
+<script>
+// ---------- data ----------
+const sections = {
+  addr: {
+    color: 'var(--c-addr)',
+    items: [
+      { label: '查看所有 IP', code: `ip a` },
+      { label: '新增 IP', code: `sudo ip addr add <span class="flag">192.168.1.100/24</span> dev eth0` },
+      { label: '刪除 IP', code: `sudo ip addr del <span class="flag">192.168.1.100/24</span> dev eth0` },
+    ]
+  },
+  route: {
+    color: 'var(--c-route)',
+    items: [
+      { label: '查看路由', code: `ip r` },
+      { label: '新增預設閘道', code: `sudo ip route add default via <span class="flag">192.168.1.1</span> dev eth0` },
+      { label: '刪除預設閘道', code: `sudo ip route del default` },
+      { label: '新增靜態路由', code: `sudo ip route add <span class="flag">10.0.0.0/24</span> via 192.168.1.254 dev eth0` },
+    ]
+  },
+  link: {
+    color: 'var(--c-link)',
+    items: [
+      { label: '查看網卡', code: `ip link show` },
+      { label: '啟用網卡', code: `sudo ip link set eth0 <span class="flag">up</span>` },
+      { label: '停用網卡', code: `sudo ip link set eth0 <span class="flag">down</span>` },
+    ]
+  },
+  neigh: {
+    color: 'var(--c-neigh)',
+    items: [
+      { label: '查看 ARP', code: `ip n` },
+    ]
+  }
+};
+
+function plainText(html){
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  return d.textContent;
+}
+
+for (const key in sections){
+  const { color, items } = sections[key];
+  const host = document.getElementById(key + '-cmds');
+  items.forEach(({label, code}) => {
+    const block = document.createElement('div');
+    block.className = 'cmd-block';
+    block.style.setProperty('--c', color);
+    block.innerHTML = `
+      <div class="cmd-head">
+        <span class="cmd-label">${label}</span>
+        <button class="copy-btn">複製</button>
+      </div>
+      <div class="cmd-code"><span class="p">$</span> ${code}</div>
+    `;
+    const btn = block.querySelector('.copy-btn');
+    btn.addEventListener('click', () => {
+      const text = '$ ' + plainText(code);
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '已複製';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '複製'; btn.classList.remove('copied'); }, 1400);
+      });
+    });
+    host.appendChild(block);
+  });
+}
+
+// ---------- checklist ----------
+const mustHave = [
+  'ip a',
+  'ip r',
+  'ip link show',
+  'ip n',
+  'ip link set eth0 up',
+  'ip link set eth0 down',
+  'ip addr add <IP> dev eth0',
+  'ip addr del <IP> dev eth0',
+  'ip route add default via <Gateway>',
+];
+const checklistHost = document.getElementById('checklist');
+mustHave.forEach(cmd => {
+  const el = document.createElement('div');
+  el.className = 'check-item';
+  el.innerHTML = `<div class="box"></div><span>${cmd}</span>`;
+  el.addEventListener('click', () => el.classList.toggle('on'));
+  checklistHost.appendChild(el);
+});
+
+// ---------- exam points ----------
+const examPoints = [
+  'ip 屬於 <b>iproute2</b> 套件。',
+  '已取代 <b>ifconfig、route、arp</b> 三支舊工具。',
+  '<b>addr</b>：管理 IP 位址。',
+  '<b>route</b>：管理路由表。',
+  '<b>link</b>：管理網卡。',
+  '<b>neigh</b>：管理 ARP 快取。',
+  '<b>ip a</b> 與 <b>ip r</b> 是最常使用的兩個指令。',
+];
+const pointsHost = document.getElementById('points');
+examPoints.forEach((text, i) => {
+  const el = document.createElement('div');
+  el.className = 'point';
+  el.innerHTML = `<span class="n">${String(i+1).padStart(2,'0')}</span><span>${text}</span>`;
+  pointsHost.appendChild(el);
+});
+
+// ---------- hero typing ----------
+const typedEl = document.getElementById('typed');
+const outEl = document.getElementById('hero-out');
+const cursorEl = document.getElementById('cursor');
+const fullCmd = 'ip a';
+const heroOutput = `1: lo: <span class="if">lo</span> <span class="up">&lt;LOOPBACK,UP,LOWER_UP&gt;</span> mtu 65536
+    inet <span class="ip">127.0.0.1/8</span> scope host lo
+2: <span class="if">eth0</span>: <span class="up">&lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt;</span> mtu 1500
+    link/ether 08:00:27:4e:9a:2c
+    inet <span class="ip">192.168.1.100/24</span> brd 192.168.1.255 scope global eth0`;
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function runHero(){
+  if (reduceMotion){
+    typedEl.textContent = fullCmd;
+    outEl.innerHTML = heroOutput;
+    outEl.classList.add('show');
+    cursorEl.style.display = 'none';
+    return;
+  }
+  let i = 0;
+  const type = setInterval(() => {
+    typedEl.textContent = fullCmd.slice(0, ++i);
+    if (i >= fullCmd.length){
+      clearInterval(type);
+      setTimeout(() => {
+        outEl.innerHTML = heroOutput;
+        requestAnimationFrame(() => outEl.classList.add('show'));
+      }, 350);
+    }
+  }, 110);
+}
+runHero();
+
+// ---------- nav active state ----------
+const navLinks = Array.from(document.querySelectorAll('#nav a'));
+const targets = navLinks.map(a => document.querySelector(a.getAttribute('href')));
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting){
+      const id = '#' + entry.target.id;
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === id));
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+targets.forEach(t => t && io.observe(t));
+</script>
+</body>
+</html>
