@@ -666,10 +666,10 @@
 </style>
 </head>
 <body>
-  <header>
-    <div class="brand">虛擬終端機<span>.</span></div>
-    <a class="back-link" href="ip2.html">← 回到 終端機 執行</a>
-  </header>
+<header class="top-header">
+  <div class="brand">虛擬終端機<span>.</span></div>
+  <a class="back-link" href="ip2.html">← 回到 終端機 執行</a>
+</header>
 <div class="progress-bar" id="progressBar"></div>
 
 <div class="shell">
@@ -1151,6 +1151,45 @@ mustHave.forEach(cmd => {
   checklistHost.appendChild(el);
 });
 
+/* ---------- top header (返回連結列) ---------- */
+header.top-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:14px 24px;
+  background:var(--panel-2);
+  border-bottom:1px solid var(--line);
+}
+@media (max-width:600px){
+  header.top-header{padding:12px 18px;}
+}
+header.top-header .brand{
+  margin:0;
+  font-size:15px;
+  font-family:var(--mono);
+  color:var(--muted);
+}
+header.top-header .brand span{
+  color:var(--c-route);
+}
+header.top-header .back-link{
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--muted);
+  text-decoration:none;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:7px 12px;
+  white-space:nowrap;
+  transition:color .15s, border-color .15s;
+}
+header.top-header .back-link:hover{
+  color:var(--text);
+  border-color:var(--muted);
+}
+  
 // ---------- exam points ----------
 const examPoints = [
   'ip 屬於 <b>iproute2</b> 套件。',
