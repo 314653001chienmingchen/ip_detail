@@ -4,6 +4,44 @@
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%231a1a1a%22/><text y=%2260%22 x=%2222%22 fill=%22%2339ff14%22 font-family=%22monospace%22 font-size=%2235%22 font-weight=%22bold%22>ip.</text></svg>"><title>ip — Linux 網路指揮台</title>
 <style>
+  /* ---------- top header (返回連結列) ---------- */
+header.top-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:14px 24px;
+  background:var(--panel-2);
+  border-bottom:1px solid var(--line);
+}
+@media (max-width:600px){
+  header.top-header{padding:12px 18px;}
+}
+header.top-header .brand{
+  margin:0;
+  font-size:15px;
+  font-family:var(--mono);
+  color:var(--muted);
+}
+header.top-header .brand span{
+  color:var(--c-route);
+}
+header.top-header .back-link{
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:var(--muted);
+  text-decoration:none;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:7px 12px;
+  white-space:nowrap;
+  transition:color .15s, border-color .15s;
+}
+header.top-header .back-link:hover{
+  color:var(--text);
+  border-color:var(--muted);
+}
   :root{
     --bg:#0B1015;
     --panel:#121A21;
@@ -663,44 +701,6 @@
     border-radius:10px;
   }
   .qrcode-box img{display:block;}
-/* ---------- top header (返回連結列) ---------- */
-header.top-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-  padding:14px 24px;
-  background:var(--panel-2);
-  border-bottom:1px solid var(--line);
-}
-@media (max-width:600px){
-  header.top-header{padding:12px 18px;}
-}
-header.top-header .brand{
-  margin:0;
-  font-size:15px;
-  font-family:var(--mono);
-  color:var(--muted);
-}
-header.top-header .brand span{
-  color:var(--c-route);
-}
-header.top-header .back-link{
-  font-family:var(--mono);
-  font-size:12.5px;
-  color:var(--muted);
-  text-decoration:none;
-  border:1px solid var(--line);
-  border-radius:6px;
-  padding:7px 12px;
-  white-space:nowrap;
-  transition:color .15s, border-color .15s;
-}
-header.top-header .back-link:hover{
-  color:var(--text);
-  border-color:var(--muted);
-}
 </style>
 </head>
 <body>
