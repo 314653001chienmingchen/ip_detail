@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ip-Linux 簡介</title>
+<title>ip — Linux 網路指揮台</title>
 <style>
   :root{
     --bg:#0B1015;
@@ -18,6 +18,7 @@
     --c-route:#E8A33D;  /* route */
     --c-link:#A48CF0;   /* link */
     --c-neigh:#63D890;  /* neigh */
+    --c-bridge:#E8799E; /* bridge / switch */
     --warn:#E8A33D;
 
     --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
@@ -593,6 +594,7 @@
       <a href="#route">路由管理</a>
       <a href="#link">網卡管理</a>
       <a href="#neigh">ARP / Neighbor</a>
+      <a href="#bridge">交換器 / 橋接器</a>
       <a href="#recommend">推薦查看方式</a>
       <a href="#quick">常用快捷指令</a>
       <a href="#legacy">舊指令對照</a>
@@ -604,6 +606,7 @@
       <span><i style="background:var(--c-route)"></i>route — 路由</span>
       <span><i style="background:var(--c-link)"></i>link — 網卡</span>
       <span><i style="background:var(--c-neigh)"></i>neigh — ARP</span>
+      <span><i style="background:var(--c-bridge)"></i>bridge — 交換器</span>
     </div>
   </aside>
 
@@ -774,6 +777,27 @@
         <div id="neigh-cmds"></div>
       </section>
 
+      <section id="bridge">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-bridge)">05 · Bridge</p>
+          <h2>交換器 / 橋接器管理</h2>
+          <p class="sec-sub">Linux 的 <b style="color:var(--text)">bridge</b>（橋接器）就是一台虛擬二層交換器：新增幾張網卡當「port」插進去，它們就能像接在同一台實體交換器上一樣互通。</p>
+        </div>
+
+        <div class="callout" style="background:linear-gradient(135deg, rgba(232,121,158,0.09), rgba(232,121,158,0.02));border-color:rgba(232,121,158,0.35)">
+          <h3>兩支工具分工</h3>
+          <p><span class="code-inline" style="color:var(--c-bridge);background:rgba(232,121,158,0.1)">ip link</span> 負責建立 / 啟用橋接器本身，把網卡插進去或拔出來；<span class="code-inline" style="color:var(--c-bridge);background:rgba(232,121,158,0.1)">bridge</span>（同屬 iproute2 套件的獨立指令）負責看橋接器內部的細節，例如 MAC 位址表、VLAN 設定。</p>
+        </div>
+
+        <div id="bridge-cmds"></div>
+
+        <div class="worked" style="margin-top:4px">
+          <div class="worked-row"><span class="w-label">VLAN Tag</span><span class="w-val">幫某張網卡的流量貼上 VLAN 編號，交換器 / 橋接器才能依 VLAN 分流，用途類似實體交換器的 Trunk / Access port。</span></div>
+          <div class="worked-row"><span class="w-label">FDB</span><span class="w-val">Forwarding Database，橋接器記錄「哪個 MAC 位址在哪個 port」的表，等同實體交換器的 CAM Table。</span></div>
+          <div class="worked-row"><span class="w-label">STP</span><span class="w-val">Spanning Tree Protocol，多台交換器 / 橋接器互連時避免環路造成廣播風暴。</span></div>
+        </div>
+      </section>
+
       <section id="recommend">
         <div class="sec-head">
           <p class="eyebrow">Tip</p>
@@ -882,6 +906,22 @@ const sections = {
     color: 'var(--c-neigh)',
     items: [
       { label: '查看 ARP', code: `ip n` },
+    ]
+  },
+  bridge: {
+    color: 'var(--c-bridge)',
+    items: [
+      { label: '建立橋接器（虛擬交換器）', code: `sudo ip link add name br0 type bridge` },
+      { label: '啟用橋接器', code: `sudo ip link set br0 <span class="flag">up</span>` },
+      { label: '把網卡加入橋接器（相當於插入交換器的 port）', code: `sudo ip link set eth0 master br0` },
+      { label: '把網卡移出橋接器', code: `sudo ip link set eth0 <span class="flag">nomaster</span>` },
+      { label: '刪除橋接器', code: `sudo ip link del br0` },
+      { label: '查看橋接器與其成員', code: `ip link show master br0` },
+      { label: '查看 MAC 位址表（CAM Table）', code: `bridge fdb show` },
+      { label: '手動新增靜態 MAC 轉發規則', code: `sudo bridge fdb add <span class="flag">aa:bb:cc:dd:ee:ff</span> dev eth0 master` },
+      { label: '建立 VLAN 子介面', code: `sudo ip link add link eth0 name eth0.<span class="flag">10</span> type vlan id <span class="flag">10</span>` },
+      { label: '查看橋接器上的 VLAN 設定', code: `bridge vlan show` },
+      { label: '開啟 STP（生成樹協定，防止迴圈）', code: `sudo ip link set br0 type bridge stp_state <span class="flag">1</span>` },
     ]
   }
 };
