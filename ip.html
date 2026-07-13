@@ -249,6 +249,151 @@
     .out{transition:none;}
   }
 
+  /* ---------- ip calc section ---------- */
+  .sub-h{
+    font-size:16px;
+    font-weight:700;
+    margin:30px 0 8px;
+  }
+  .sub-h:first-of-type{margin-top:22px;}
+  .sub-p{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:64ch;}
+  .sub-p b{color:var(--text);}
+  .code-inline{
+    font-family:var(--mono);
+    color:var(--c-route);
+    background:rgba(232,163,61,0.08);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:0.92em;
+  }
+
+  .bin-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px 18px 14px;
+    margin-bottom:8px;
+  }
+  .bin-row{display:flex;gap:10px;}
+  .bin-row + .bin-row{margin-top:6px;}
+  .bin-dec{
+    flex:1;
+    text-align:center;
+    font-family:var(--mono);
+    font-size:15px;
+    font-weight:700;
+    color:var(--c-addr);
+  }
+  .bin-bits{
+    flex:1;
+    text-align:center;
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--muted);
+    letter-spacing:0.02em;
+  }
+  .bin-caption{margin:12px 0 0;font-size:12.5px;color:var(--muted-2);}
+
+  .formula-box{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--c-route);
+    border-radius:8px;
+    padding:16px 18px;
+    margin-bottom:8px;
+  }
+  .formula{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-family:var(--mono);
+    font-size:13.5px;
+    padding:6px 0;
+  }
+  .f-name{color:var(--text);font-weight:700;min-width:96px;}
+  .f-eq{color:var(--muted-2);}
+  .f-expr{color:var(--muted);}
+  .f-expr b{color:var(--c-route);}
+  .formula-note{margin:10px 0 0;font-size:12.5px;color:var(--muted-2);font-family:var(--sans);}
+
+  .worked{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:8px;
+  }
+  .worked-row{
+    display:flex;
+    gap:16px;
+    padding:11px 16px;
+    border-bottom:1px solid var(--line);
+    align-items:baseline;
+    flex-wrap:wrap;
+  }
+  .worked-row:last-child{border-bottom:none;}
+  .w-label{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted-2);
+    letter-spacing:0.05em;
+    flex:0 0 130px;
+  }
+  .w-val{font-size:13.5px;color:var(--text);}
+  .w-val .bit{color:var(--c-link);}
+  .w-val .bit.hl{color:var(--c-neigh);}
+  .hl-text{color:var(--c-neigh) !important;font-weight:700;}
+
+  .calc-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px;
+  }
+  .calc-inputrow{display:flex;gap:10px;}
+  .calc-input{
+    flex:1;
+    font-family:var(--mono);
+    font-size:14px;
+    color:var(--text);
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:10px 12px;
+    outline:none;
+  }
+  .calc-input:focus{border-color:var(--c-addr);}
+  .calc-btn{
+    font-family:var(--mono);
+    font-size:13px;
+    font-weight:600;
+    color:#0B1015;
+    background:var(--c-route);
+    border:none;
+    border-radius:6px;
+    padding:0 20px;
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  .calc-btn:hover{opacity:0.85;}
+  .calc-error{color:#E06666;font-size:12.5px;font-family:var(--mono);margin:10px 0 0;min-height:0;}
+  .calc-output{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    margin-top:16px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  @media (max-width:600px){.calc-output{grid-template-columns:1fr;}}
+  .calc-cell{background:var(--panel-2);padding:12px 14px;}
+  .calc-cell .k{font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:0.05em;text-transform:uppercase;}
+  .calc-cell .v{font-family:var(--mono);font-size:14px;color:var(--text);margin-top:4px;word-break:break-all;}
+  .calc-cell.wide{grid-column:1 / -1;}
+  .calc-cell .v.accent{color:var(--c-neigh);}
+
   /* ---------- object cards ---------- */
   .obj-grid{
     display:grid;
@@ -442,6 +587,7 @@
     <div class="brand">iproute2 速查<b>ip<span class="dot">.</span></b></div>
     <nav id="nav">
       <a href="#hero-sec">簡介</a>
+      <a href="#calc">IP 位址計算</a>
       <a href="#objects">四大物件</a>
       <a href="#addr">IP 位址管理</a>
       <a href="#route">路由管理</a>
@@ -482,6 +628,89 @@
     </section>
 
     <div class="wrap">
+
+      <section id="calc">
+        <div class="sec-head">
+          <p class="eyebrow">Math</p>
+          <h2>IP 位址計算</h2>
+          <p class="sec-sub">在動手輸入指令之前，先搞懂 IP 位址本身怎麼組成、怎麼分類、怎麼算子網路——這是所有 <code style="font-family:var(--mono);color:var(--text)">ip addr</code> / <code style="font-family:var(--mono);color:var(--text)">ip route</code> 操作的地基。</p>
+        </div>
+
+        <h3 class="sub-h">32 位元的結構</h3>
+        <p class="sub-p">IPv4 位址是一組 <b>32 位元二進位數字</b>，習慣切成 4 組、每組 8 位元（1 個 <b>octet</b>），轉成 0–255 的十進位並用點分隔，這就是「點分十進位」（dotted decimal）。</p>
+        <div class="bin-card">
+          <div class="bin-row">
+            <span class="bin-dec">192</span><span class="bin-dec">168</span><span class="bin-dec">1</span><span class="bin-dec">130</span>
+          </div>
+          <div class="bin-row bin-row--bits">
+            <span class="bin-bits">11000000</span><span class="bin-bits">10101000</span><span class="bin-bits">00000001</span><span class="bin-bits">10000010</span>
+          </div>
+          <p class="bin-caption">每一組 8 bit 都能表示 0～255（2⁸ = 256 種可能），四組合起來就是完整的 32 bit 位址。</p>
+        </div>
+
+        <h3 class="sub-h">IP 位址分類（Class）</h3>
+        <p class="sub-p">依照最前面幾個位元，傳統上把 IP 分成 A～E 五個等級，決定了預設的網路 / 主機切法。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>類別</th><th>第一組範圍</th><th>預設遮罩</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td class="code">A</td><td>1 – 126</td><td class="code">255.0.0.0 (/8)</td><td>大型網路</td></tr>
+              <tr><td class="code">B</td><td>128 – 191</td><td class="code">255.255.0.0 (/16)</td><td>中型網路</td></tr>
+              <tr><td class="code">C</td><td>192 – 223</td><td class="code">255.255.255.0 (/24)</td><td>小型網路</td></tr>
+              <tr><td class="code">D</td><td>224 – 239</td><td>—</td><td>多播 Multicast</td></tr>
+              <tr><td class="code">E</td><td>240 – 255</td><td>—</td><td>保留 / 實驗用</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="sub-p" style="margin-top:10px">127 開頭是保留給 <b>loopback</b>（如 127.0.0.1），不屬於任何一般分類。現代網路多半改用不看 Class、直接寫前綴長度的 <b>CIDR</b> 表示法。</p>
+
+        <h3 class="sub-h">子網路遮罩與 CIDR</h3>
+        <p class="sub-p"><b>子網路遮罩（Subnet Mask）</b>用來標出 32 bit 裡哪些是「網路位元」、哪些是「主機位元」。<b>CIDR</b>（如 <span class="code-inline">/24</span>）就是網路位元的數量，兩者是同一件事的兩種寫法。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>CIDR</th><th>子網路遮罩</th><th>總位址數</th><th>可用主機數</th></tr></thead>
+            <tbody>
+              <tr><td class="code">/24</td><td class="code">255.255.255.0</td><td>256</td><td>254</td></tr>
+              <tr><td class="code">/25</td><td class="code">255.255.255.128</td><td>128</td><td>126</td></tr>
+              <tr><td class="code">/26</td><td class="code">255.255.255.192</td><td>64</td><td>62</td></tr>
+              <tr><td class="code">/27</td><td class="code">255.255.255.224</td><td>32</td><td>30</td></tr>
+              <tr><td class="code">/28</td><td class="code">255.255.255.240</td><td>16</td><td>14</td></tr>
+              <tr><td class="code">/29</td><td class="code">255.255.255.248</td><td>8</td><td>6</td></tr>
+              <tr><td class="code">/30</td><td class="code">255.255.255.252</td><td>4</td><td>2</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-h">計算公式</h3>
+        <div class="formula-box">
+          <div class="formula"><span class="f-name">網路位址</span><span class="f-eq">=</span><span class="f-expr">IP <b>AND</b> 子網路遮罩</span></div>
+          <div class="formula"><span class="f-name">廣播位址</span><span class="f-eq">=</span><span class="f-expr">網路位址 <b>OR</b> 反遮罩（Wildcard）</span></div>
+          <div class="formula"><span class="f-name">可用主機數</span><span class="f-eq">=</span><span class="f-expr">2<sup>(32 − 前綴長度)</sup> − 2</span></div>
+          <p class="formula-note">扣掉的 2 個，是被保留起來的<b>網路位址</b>（全 0 主機位元）和<b>廣播位址</b>（全 1 主機位元），不能分給任何一台主機。</p>
+        </div>
+
+        <h3 class="sub-h">實際算一次：192.168.1.130 /26</h3>
+        <div class="worked">
+          <div class="worked-row"><span class="w-label">子網路遮罩</span><span class="w-val code">255.255.255.192</span></div>
+          <div class="worked-row"><span class="w-label">關鍵那組 octet</span><span class="w-val code">130 = <span class="bit">10000010</span>　遮罩 192 = <span class="bit">11000000</span></span></div>
+          <div class="worked-row"><span class="w-label">AND 運算</span><span class="w-val code"><span class="bit">10000010</span> AND <span class="bit">11000000</span> = <span class="bit hl">10000000</span> = 128</span></div>
+          <div class="worked-row"><span class="w-label">網路位址</span><span class="w-val code hl-text">192.168.1.128</span></div>
+          <div class="worked-row"><span class="w-label">廣播位址</span><span class="w-val code hl-text">192.168.1.191</span></div>
+          <div class="worked-row"><span class="w-label">可用範圍</span><span class="w-val code">192.168.1.129 ～ 192.168.1.190</span></div>
+          <div class="worked-row"><span class="w-label">可用主機數</span><span class="w-val code">2⁶ − 2 = 62</span></div>
+        </div>
+
+        <h3 class="sub-h">互動 CIDR 計算機</h3>
+        <p class="sub-p">換一組 IP 練習看看，格式為 <span class="code-inline">IP/前綴長度</span>。</p>
+        <div class="calc-card">
+          <div class="calc-inputrow">
+            <input id="cidr-input" class="calc-input" type="text" value="192.168.1.130/26" spellcheck="false">
+            <button id="cidr-btn" class="calc-btn">計算</button>
+          </div>
+          <p id="cidr-error" class="calc-error"></p>
+          <div id="cidr-output" class="calc-output"></div>
+        </div>
+      </section>
 
       <section id="objects">
         <div class="sec-head">
@@ -763,6 +992,74 @@ function runHero(){
   }, 110);
 }
 runHero();
+
+// ---------- cidr calculator ----------
+function ipToInt(ip){
+  const parts = ip.split('.').map(Number);
+  return ((parts[0]<<24) | (parts[1]<<16) | (parts[2]<<8) | parts[3]) >>> 0;
+}
+function intToIp(int){
+  return [24,16,8,0].map(s => (int >>> s) & 255).join('.');
+}
+function toBinaryDotted(int){
+  return [24,16,8,0].map(s => ((int >>> s) & 255).toString(2).padStart(8,'0')).join('.');
+}
+function isValidIp(ip){
+  const parts = ip.split('.');
+  if (parts.length !== 4) return false;
+  return parts.every(p => /^\d{1,3}$/.test(p) && Number(p) >= 0 && Number(p) <= 255);
+}
+
+const cidrInput = document.getElementById('cidr-input');
+const cidrBtn = document.getElementById('cidr-btn');
+const cidrError = document.getElementById('cidr-error');
+const cidrOutput = document.getElementById('cidr-output');
+
+function calcCidr(){
+  cidrError.textContent = '';
+  const raw = cidrInput.value.trim();
+  const match = raw.match(/^(\S+)\/(\d{1,2})$/);
+  if (!match){ cidrError.textContent = '格式錯誤，請輸入 IP/前綴長度，例如 192.168.1.130/26'; cidrOutput.innerHTML=''; return; }
+  const ip = match[1];
+  const prefix = Number(match[2]);
+  if (!isValidIp(ip)){ cidrError.textContent = 'IP 位址格式錯誤'; cidrOutput.innerHTML=''; return; }
+  if (prefix < 0 || prefix > 32){ cidrError.textContent = '前綴長度需介於 0 – 32'; cidrOutput.innerHTML=''; return; }
+
+  const ipInt = ipToInt(ip);
+  const maskInt = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+  const wildcardInt = (~maskInt) >>> 0;
+  const networkInt = (ipInt & maskInt) >>> 0;
+  const broadcastInt = (networkInt | wildcardInt) >>> 0;
+
+  let firstHost, lastHost, usable;
+  if (prefix >= 31){
+    firstHost = networkInt;
+    lastHost = broadcastInt;
+    usable = prefix === 32 ? 1 : 2;
+  } else {
+    firstHost = networkInt + 1;
+    lastHost = broadcastInt - 1;
+    usable = Math.pow(2, 32 - prefix) - 2;
+  }
+
+  const rows = [
+    ['子網路遮罩', intToIp(maskInt)],
+    ['反遮罩 Wildcard', intToIp(wildcardInt)],
+    ['網路位址', intToIp(networkInt), true],
+    ['廣播位址', intToIp(broadcastInt), true],
+    ['第一個可用主機', intToIp(firstHost)],
+    ['最後一個可用主機', intToIp(lastHost)],
+    ['可用主機數', usable.toLocaleString()],
+  ];
+
+  cidrOutput.innerHTML = rows.map(([k,v,accent]) =>
+    `<div class="calc-cell"><div class="k">${k}</div><div class="v${accent ? ' accent' : ''}">${v}</div></div>`
+  ).join('') + `<div class="calc-cell wide"><div class="k">IP 二進位表示</div><div class="v">${toBinaryDotted(ipInt)}</div></div>`;
+}
+
+cidrBtn.addEventListener('click', calcCidr);
+cidrInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcCidr(); });
+calcCidr();
 
 // ---------- nav active state ----------
 const navLinks = Array.from(document.querySelectorAll('#nav a'));
