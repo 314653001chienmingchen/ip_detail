@@ -779,6 +779,7 @@ header.top-header .back-link:hover{
       <a href="#objects">四大物件</a>
       <a href="#addr">IP 位址管理</a>
       <a href="#route">路由管理</a>
+      <a href="#route-debug">路由除錯工具</a>
       <a href="#link">網卡管理</a>
       <a href="#neigh">ARP / Neighbor</a>
       <a href="#bridge">交換器 / 橋接器</a>
@@ -789,6 +790,7 @@ header.top-header .back-link:hover{
       <a href="#must">必背指令</a>
       <a href="#exam">考試重點</a>
       <a href="#share">分享 / QR Code</a>
+      <a href="switch.html">🔀 交換機是什麼？</a>
       <a href="ip2.html">🖥 虛擬終端機</a>
     </nav>
     <div class="legend">
@@ -1034,6 +1036,27 @@ header.top-header .back-link:hover{
         <div id="route-cmds"></div>
       </section>
 
+      <section id="route-debug">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-route)">02+ · Debug</p>
+          <h2>路由除錯工具</h2>
+          <p class="sec-sub">網路「連得上、連不上」的問題，十次有八次是路由表設定的問題。這兩個指令是排查連線異常時最先該想到的。</p>
+        </div>
+
+        <div id="routedebug-cmds"></div>
+
+        <div class="worked" style="margin-top:4px">
+          <div class="worked-row"><span class="w-label">route get</span><span class="w-val">問系統「如果我要送封包到這個目的地，實際上會走哪條路由、用哪張網卡、來源 IP 是什麼」——不用自己對照路由表用眼睛猜。</span></div>
+          <div class="worked-row"><span class="w-label">-s（statistics）</span><span class="w-val">顯示這張網卡收送封包的統計數字：收送封包數、錯誤數（errors）、掉包數（dropped）。錯誤數或掉包數持續增加，通常代表實體層或線路有問題。</span></div>
+        </div>
+
+        <div class="callout link-out">
+          <h3>去虛擬終端機動手試試看</h3>
+          <p>開機後，試著先用 <span class="code-inline" style="color:var(--c-addr)">ip route get 8.8.8.8</span> 看結果，再對照 <span class="code-inline" style="color:var(--c-addr)">ip route</span> 印出的路由表，確認兩者是不是一致。</p>
+          <a class="go-btn" href="ip2.html">🖥 開啟虛擬終端機</a>
+        </div>
+      </section>
+
       <section id="link">
         <div class="sec-head">
           <p class="eyebrow" style="color:var(--c-link)">03 · Link</p>
@@ -1070,6 +1093,12 @@ header.top-header .back-link:hover{
           <div class="worked-row"><span class="w-label">VLAN Tag</span><span class="w-val">幫某張網卡的流量貼上 VLAN 編號，交換器 / 橋接器才能依 VLAN 分流，用途類似實體交換器的 Trunk / Access port。</span></div>
           <div class="worked-row"><span class="w-label">FDB</span><span class="w-val">Forwarding Database，橋接器記錄「哪個 MAC 位址在哪個 port」的表，等同實體交換器的 CAM Table。</span></div>
           <div class="worked-row"><span class="w-label">STP</span><span class="w-val">Spanning Tree Protocol，多台交換器 / 橋接器互連時避免環路造成廣播風暴。</span></div>
+        </div>
+
+        <div class="callout link-out">
+          <h3>不熟悉這些名詞背後的原理？</h3>
+          <p>VLAN Tag、FDB、STP 這些名詞如果聽起來還是有點抽象，可以先去看「交換機是什麼？」那頁，從實體交換器的角度理解 MAC 位址表怎麼建立、為什麼需要 VLAN、STP 在防什麼——再回頭看這裡的指令會更有感覺。</p>
+          <a class="go-btn" href="switch.html">🔀 前往「交換機是什麼？」</a>
         </div>
       </section>
 
@@ -1208,6 +1237,14 @@ const sections = {
       { label: '新增預設閘道', code: `sudo ip route add default via <span class="flag">192.168.1.1</span> dev eth0` },
       { label: '刪除預設閘道', code: `sudo ip route del default` },
       { label: '新增靜態路由', code: `sudo ip route add <span class="flag">10.0.0.0/24</span> via 192.168.1.254 dev eth0` },
+    ]
+  },
+  routedebug: {
+    color: 'var(--c-route)',
+    items: [
+      { label: '查詢到某目的地實際會走的路由', code: `ip route get <span class="flag">8.8.8.8</span>` },
+      { label: '查看某網卡的流量統計（含錯誤/掉包數）', code: `ip -s link show eth0` },
+      { label: '查看所有網卡的流量統計', code: `ip -s link` },
     ]
   },
   link: {
