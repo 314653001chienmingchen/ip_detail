@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> 網路基礎</title>
+<style>
+  :root{
+    --bg:#0B1015;
+    --panel:#121A21;
+    --panel-2:#0E151B;
+    --line:#20303A;
+    --text:#DCE5EC;
+    --muted:#7C8C99;
+    --muted-2:#54636F;
+
+    --c-addr:#5FD0E0;
+    --c-route:#E8A33D;
+    --c-link:#A48CF0;
+    --c-neigh:#63D890;
+    --c-bridge:#E8799E;
+    --c-bond:#6FA8E8;
+
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--c-bridge);color:#0B1015;}
+  a{color:inherit;}
+
+  header.top-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    padding:14px 24px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+  }
+  header.top-header .brand{
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--muted);
+  }
+  header.top-header .brand span{color:var(--c-bridge);}
+  header.top-header .back-link{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--muted);
+    text-decoration:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:7px 12px;
+    white-space:nowrap;
+    transition:color .15s, border-color .15s;
+  }
+  header.top-header .back-link:hover{color:var(--text);border-color:var(--muted);}
+
+  .wrap{max-width:820px;margin:0 auto;padding:0 32px 100px;}
+  @media (max-width:600px){.wrap{padding:0 18px 80px;}}
+
+  .hero{padding:56px 0 30px;}
+  @media (max-width:600px){.hero{padding:36px 0 20px;}}
+  .kicker{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--c-bridge);
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin:0 0 14px;
+  }
+  h1{
+    font-size:clamp(28px,5vw,42px);
+    line-height:1.2;
+    letter-spacing:-0.02em;
+    margin:0 0 16px;
+    max-width:16ch;
+  }
+  .lede{color:var(--muted);font-size:15.5px;max-width:60ch;margin:0;}
+  .lede b{color:var(--text);}
+
+  section{scroll-margin-top:20px;padding:50px 0 4px;}
+  section:first-of-type{padding-top:10px;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  h2{font-size:23px;font-weight:700;letter-spacing:-0.01em;margin:0 0 6px;}
+  .sec-sub{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:58ch;}
+  h3.sub-h{font-size:15.5px;font-weight:700;margin:24px 0 8px;}
+  p.sub-p{color:var(--muted);font-size:14px;margin:0 0 14px;max-width:62ch;}
+  p.sub-p b{color:var(--text);}
+
+  .code-inline{
+    font-family:var(--mono);
+    color:var(--c-bridge);
+    background:rgba(232,121,158,0.1);
+    padding:1px 6px;
+    border-radius:4px;
+    font-size:0.92em;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  thead th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    padding:10px 14px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--muted);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td.code{font-family:var(--mono);color:var(--text);}
+  .table-wrap{margin-bottom:10px;overflow-x:auto;}
+
+  .worked{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .step{
+    display:flex;
+    gap:14px;
+    padding:14px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:none;}
+  .step .n{
+    font-family:var(--mono);
+    font-weight:700;
+    color:var(--c-bridge);
+    flex:0 0 auto;
+  }
+  .step .t{font-size:13.5px;color:var(--muted);}
+  .step .t b{color:var(--text);}
+
+  .callout{
+    background:linear-gradient(135deg, rgba(232,121,158,0.09), rgba(232,121,158,0.02));
+    border:1px solid rgba(232,121,158,0.35);
+    border-radius:10px;
+    padding:18px 20px;
+    margin:16px 0 10px;
+  }
+  .callout h3{margin:0 0 6px;font-size:15px;color:var(--text);}
+  .callout p{margin:0;color:var(--muted);font-size:13.5px;}
+  .callout a.go-btn{
+    display:inline-block;
+    margin-top:12px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    font-weight:600;
+    color:#0B1015;
+    background:var(--c-bridge);
+    padding:8px 16px;
+    border-radius:6px;
+    text-decoration:none;
+  }
+  .callout a.go-btn:hover{opacity:0.85;}
+
+  .compare-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:10px;
+  }
+  @media (max-width:600px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--c);
+    border-radius:8px;
+    padding:14px 16px;
+  }
+  .compare-card .name{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:14px;
+    color:var(--c);
+    margin-bottom:6px;
+  }
+  .compare-card .layer{
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--muted-2);
+    border:1px solid var(--line);
+    display:inline-block;
+    padding:1px 6px;
+    border-radius:4px;
+    margin-bottom:8px;
+  }
+  .compare-card p{margin:0;font-size:12.5px;color:var(--muted);}
+
+  footer{
+    text-align:center;
+    padding:40px 20px 60px;
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--muted-2);
+  }
+</style>
+</head>
+<body>
+<header class="top-header">
+  <div class="brand">交換機是什麼<span>.</span></div>
+  <a class="back-link" href="ip.html">← 回到 ip 指令參考</a>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <p class="kicker">Switch · 網路基礎觀念</p>
+    <h1>交換機到底在做什麼事？</h1>
+    <p class="lede">交換機（Switch）是區域網路裡最基礎的設備。它靠著<b>記住「MAC 位址在哪個孔」</b>，把封包精準送到該去的地方——而不是像集線器（Hub）那樣，收到什麼就往所有孔亂槍打鳥式地全部送出去。</p>
+  </section>
+
+  <section id="compare">
+    <div class="eyebrow">Compare</div>
+    <h2>交換機 vs 集線器 vs 路由器</h2>
+    <p class="sec-sub">三個常被搞混的設備，差別在於「依據什麼判斷該送去哪裡」。</p>
+    <div class="compare-grid">
+      <div class="compare-card" style="--c:var(--muted-2)">
+        <div class="name">Hub 集線器</div>
+        <div class="layer">Layer 1</div>
+        <p>沒有判斷能力，收到訊號就從所有孔全部送出去，所有裝置共用同一個碰撞網域。現在幾乎絕跡。</p>
+      </div>
+      <div class="compare-card" style="--c:var(--c-bridge)">
+        <div class="name">Switch 交換機</div>
+        <div class="layer">Layer 2</div>
+        <p>依 <b style="color:var(--text)">MAC 位址</b> 判斷，查表後精準送到對的 port，是區域網路裡最常見的核心設備。</p>
+      </div>
+      <div class="compare-card" style="--c:var(--c-route)">
+        <div class="name">Router 路由器</div>
+        <div class="layer">Layer 3</div>
+        <p>依 <b style="color:var(--text)">IP 位址</b> 判斷，負責跨網段轉送封包，決定封包該走哪條路由。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="mac-table">
+    <div class="eyebrow">How it works</div>
+    <h2>MAC 位址表是怎麼建立的</h2>
+    <p class="sec-sub">交換機開機時什麼都不知道，透過四個階段慢慢學會「誰在哪個孔」。</p>
+    <div class="worked">
+      <div class="step">
+        <span class="n">01</span>
+        <span class="t"><b>Flooding（洪泛）</b>——MAC 表是空的，收到封包不知道目的地在哪個孔，就從來源孔以外的<b>所有孔</b>送出去，行為暫時很像 Hub。</span>
+      </div>
+      <div class="step">
+        <span class="n">02</span>
+        <span class="t"><b>Learning（學習）</b>——同時把「這個封包的來源 MAC」跟「它是從哪個孔進來的」記錄進 MAC 位址表（也叫 CAM Table）。</span>
+      </div>
+      <div class="step">
+        <span class="n">03</span>
+        <span class="t"><b>Forwarding（轉送）</b>——之後再收到要送去這個 MAC 的封包，直接查表從對應的孔送出去，不再往其他孔浪費頻寬。</span>
+      </div>
+      <div class="step">
+        <span class="n">04</span>
+        <span class="t"><b>Aging（老化）</b>——一段時間（預設常見 300 秒）沒再看到某個 MAC 出現，就把它從表裡刪掉，避免記錄過期或表爆滿。</span>
+      </div>
+    </div>
+
+    <h3 class="sub-h">MAC 位址表長什麼樣子</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Port</th><th>MAC Address</th><th>剩餘老化時間</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td class="code">AA:BB:CC:11:22:33</td><td>45s</td></tr>
+          <tr><td>2</td><td class="code">AA:BB:CC:44:55:66</td><td>12s</td></tr>
+          <tr><td>3</td><td class="code">AA:BB:CC:77:88:99</td><td>289s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="domains">
+    <div class="eyebrow">Domains</div>
+    <h2>碰撞網域 vs 廣播網域</h2>
+    <p class="sec-sub">這是交換機能解決的問題，也是它跟 Hub 最根本的差異。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>網域類型</th><th>問題</th><th>誰能切開</th></tr></thead>
+        <tbody>
+          <tr><td><b style="color:var(--text)">碰撞網域</b><br>Collision Domain</td><td>同一時間兩台裝置一起傳送會互相干擾（碰撞）</td><td>Switch 的<b style="color:var(--text)">每個 port</b> 都是獨立碰撞網域</td></tr>
+          <tr><td><b style="color:var(--text)">廣播網域</b><br>Broadcast Domain</td><td>廣播封包會傳到網域內所有裝置，裝置一多流量就爆炸</td><td>只有 <b style="color:var(--text)">VLAN</b> 或 <b style="color:var(--text)">Router（Layer 3 裝置）</b>能真正切開</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub-p" style="margin-top:10px">關鍵觀念：<b>交換機解決了碰撞網域的問題，但解決不了廣播網域的問題</b>——同一台交換機（或用 Trunk 相連的多台交換機）上的所有裝置，預設都在同一個廣播網域裡。</p>
+  </section>
+
+  <section id="vlan-concept">
+    <div class="eyebrow">VLAN</div>
+    <h2>VLAN：把一台交換機切成好幾個邏輯網路</h2>
+    <p class="sec-sub">VLAN（Virtual LAN）讓你不用多買硬體，就能把同一台實體交換機邏輯上切成好幾個獨立的廣播網域。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Port 類型</th><th>行為</th><th>常見用途</th></tr></thead>
+        <tbody>
+          <tr><td class="code">Access Port</td><td>只屬於<b style="color:var(--text)">單一 VLAN</b>，進出的封包不帶 VLAN 標籤（untagged）</td><td>接電腦、印表機等終端設備</td></tr>
+          <tr><td class="code">Trunk Port</td><td>允許<b style="color:var(--text)">多個 VLAN</b> 的流量通過，封包會帶上 VLAN 標籤（tagged）</td><td>交換機之間互連、接虛擬化主機</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="stp-concept">
+    <div class="eyebrow">Loop Prevention</div>
+    <h2>STP：避免多台交換機接成迴圈</h2>
+    <p class="sub-p">如果為了備援把多台交換機用兩條線互連，會形成實體迴圈，廣播封包會被無限重複轉送、瞬間癱瘓整個網路（<b>廣播風暴</b>）。<b style="color:var(--text)">STP（Spanning Tree Protocol，生成樹協定）</b>會自動選出一台 <b style="color:var(--text)">Root Bridge</b>，並把多餘的路徑邏輯上「關閉」（Blocking），只留一條路徑通行，等主要線路斷了才會自動切換備援路徑。</p>
+  </section>
+
+  <section id="types">
+    <div class="eyebrow">Types</div>
+    <h2>交換機的分類</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>分類</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr><td class="code">Unmanaged</td><td>隨插即用，無法設定任何東西，常見於家用小型交換器</td></tr>
+          <tr><td class="code">Managed</td><td>可設定 VLAN、Port 鏡像、STP、SNMP 監控等，企業 / 機房標配</td></tr>
+          <tr><td class="code">L2 Switch</td><td>只依 MAC 位址轉送，不處理 IP 層的事情</td></tr>
+          <tr><td class="code">L3 Switch</td><td>除了 L2 功能，還內建路由能力，可以直接跨 VLAN 轉送（Inter-VLAN Routing），速度通常比外接路由器快</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="practice">
+    <div class="eyebrow">Practice</div>
+    <h2>延伸練習</h2>
+    <p class="sec-sub">這一頁講的是交換機的觀念；如果想看在 Linux 裡怎麼用軟體模擬出同樣的行為（Bridge、VLAN、STP 的實際指令），可以接著看：</p>
+    <div class="callout">
+      <h3>Linux Bridge：軟體模擬的交換機</h3>
+      <p>回到 ip 指令參考的「交換器 / 橋接器管理」章節，看 <span class="code-inline">ip link add type bridge</span>、<span class="code-inline">bridge fdb show</span> 這些指令怎麼對應到這一頁教的 MAC 表、VLAN、STP 概念。</p>
+      <a class="go-btn" href="index.html#bridge">前往「交換器 / 橋接器管理」→</a>
+    </div>
+  </section>
+
+  <footer>網路基礎 · Switch / Hub / Router / VLAN / STP</footer>
+</div>
+</body>
+</html>
