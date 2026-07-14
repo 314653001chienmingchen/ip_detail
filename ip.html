@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%231a1a1a%22/><text y=%2260%22 x=%2222%22 fill=%22%2339ff14%22 font-family=%22monospace%22 font-size=%2235%22 font-weight=%22bold%22>ip.</text></svg>"><title>ip — Linux 網路指揮台</title>
 <style>
 
@@ -370,6 +371,9 @@ header.top-header .back-link:hover{
   }
   .bin-row{display:flex;gap:10px;}
   .bin-row + .bin-row{margin-top:6px;}
+  @media (max-width:420px){
+    .bin-row{gap:4px;}
+  }
   .bin-dec{
     flex:1;
     text-align:center;
@@ -385,6 +389,10 @@ header.top-header .back-link:hover{
     font-size:13px;
     color:var(--muted);
     letter-spacing:0.02em;
+  }
+  @media (max-width:420px){
+    .bin-dec{font-size:12.5px;}
+    .bin-bits{font-size:10px;letter-spacing:0;}
   }
   .bin-caption{margin:12px 0 0;font-size:12.5px;color:var(--muted-2);}
 
@@ -433,6 +441,10 @@ header.top-header .back-link:hover{
     letter-spacing:0.05em;
     flex:0 0 130px;
   }
+  @media (max-width:480px){
+    .worked-row{flex-direction:column;gap:4px;}
+    .w-label{flex:none;}
+  }
   .w-val{font-size:13.5px;color:var(--text);}
   .w-val .bit{color:var(--c-link);}
   .w-val .bit.hl{color:var(--c-neigh);}
@@ -444,9 +456,10 @@ header.top-header .back-link:hover{
     border-radius:8px;
     padding:18px;
   }
-  .calc-inputrow{display:flex;gap:10px;}
+  .calc-inputrow{display:flex;gap:10px;flex-wrap:wrap;}
   .calc-input{
     flex:1;
+    min-width:0;
     font-family:var(--mono);
     font-size:14px;
     color:var(--text);
@@ -578,6 +591,23 @@ header.top-header .back-link:hover{
   .callout p{margin:0;color:var(--muted);font-size:13.5px;}
   .callout ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px;}
   .callout li b{color:var(--text);}
+  .callout.link-out{
+    background:linear-gradient(135deg, rgba(95,208,224,0.09), rgba(95,208,224,0.02));
+    border-color:rgba(95,208,224,0.35);
+  }
+  .callout.link-out a.go-btn{
+    display:inline-block;
+    margin-top:12px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    font-weight:600;
+    color:#0B1015;
+    background:var(--c-addr);
+    padding:8px 16px;
+    border-radius:6px;
+    text-decoration:none;
+  }
+  .callout.link-out a.go-btn:hover{opacity:0.85;}
 
   /* ---------- tables ---------- */
   table{
@@ -702,12 +732,15 @@ header.top-header .back-link:hover{
     border-radius:10px;
   }
   .qrcode-box img{display:block;}
+
+  /* ---------- vlsm table ---------- */
+  .vlsm-table td, .vlsm-table th{white-space:nowrap;}
 </style>
 </head>
 <body>
 <header class="top-header">
-  <div class="brand">虛擬終端機<span>.</span></div>
-  <a class="back-link" href="ip2.html">← 回到 終端機 執行</a>
+  <div class="brand">ip 指令參考<span>.</span></div>
+  <a class="back-link" href="terminal.html">🖥 去虛擬終端機動手練習 →</a>
 </header>
 <div class="progress-bar" id="progressBar"></div>
 
@@ -720,6 +753,8 @@ header.top-header .back-link:hover{
     <nav id="nav">
       <a href="#hero-sec">簡介</a>
       <a href="#calc">IP 位址計算</a>
+      <a href="#private">私有 / 保留位址</a>
+      <a href="#vlsm">VLSM 子網路劃分</a>
       <a href="#objects">四大物件</a>
       <a href="#addr">IP 位址管理</a>
       <a href="#route">路由管理</a>
@@ -733,6 +768,7 @@ header.top-header .back-link:hover{
       <a href="#must">必背指令</a>
       <a href="#exam">考試重點</a>
       <a href="#share">分享 / QR Code</a>
+      <a href="terminal.html">🖥 虛擬終端機</a>
     </nav>
     <div class="legend">
       <span><i style="background:var(--c-addr)"></i>address — IP 位址</span>
@@ -846,6 +882,90 @@ header.top-header .back-link:hover{
           </div>
           <p id="cidr-error" class="calc-error"></p>
           <div id="cidr-output" class="calc-output"></div>
+        </div>
+      </section>
+
+      <section id="private">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-addr)">Reserved</p>
+          <h2>私有 / 保留位址</h2>
+          <p class="sec-sub">不是每個 IP 都能在公開網路上使用，這些範圍有特殊用途，考試跟實務都常考。</p>
+        </div>
+
+        <h3 class="sub-h">私有 IP（RFC1918）</h3>
+        <p class="sub-p">這三段範圍<b>不會出現在公開網際網路上</b>，只在區域網路內部使用，要連上外網得靠 <b>NAT</b>（網路位址轉換）把私有位址轉成公有位址。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>範圍</th><th>CIDR</th><th>常見用途</th></tr></thead>
+            <tbody>
+              <tr><td class="code">10.0.0.0 – 10.255.255.255</td><td class="code">10.0.0.0/8</td><td>大型企業 / 機房內網</td></tr>
+              <tr><td class="code">172.16.0.0 – 172.31.255.255</td><td class="code">172.16.0.0/12</td><td>中型網路，常見於容器 / 虛擬網路</td></tr>
+              <tr><td class="code">192.168.0.0 – 192.168.255.255</td><td class="code">192.168.0.0/16</td><td>家用路由器、小型辦公室</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-h">特殊 / 保留位址</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>範圍</th><th>名稱</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td class="code">127.0.0.0/8</td><td>Loopback</td><td>指回自己，<span class="code-inline">127.0.0.1</span> 最常見</td></tr>
+              <tr><td class="code">169.254.0.0/16</td><td>APIPA / Link-Local</td><td>抓不到 DHCP 時系統自己生的位址，代表網路設定有問題</td></tr>
+              <tr><td class="code">224.0.0.0/4</td><td>Multicast</td><td>一對多群播，路由協定常用</td></tr>
+              <tr><td class="code">255.255.255.255</td><td>全網廣播</td><td>對本地網段所有主機廣播</td></tr>
+              <tr><td class="code">0.0.0.0</td><td>未指定位址</td><td>代表「這台主機還沒有位址」或路由表裡的「任意來源 / 預設路由」</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="sub-p" style="margin-top:10px">看到 <b>169.254.x.x</b> 通常代表這台機器沒有正確拿到 IP（DHCP 失敗），是很常見的除錯線索。</p>
+      </section>
+
+      <section id="vlsm">
+        <div class="sec-head">
+          <p class="eyebrow" style="color:var(--c-route)">Practice</p>
+          <h2>VLSM 子網路劃分</h2>
+          <p class="sec-sub">實務上更常見的不是「算一個網段」，而是把一個大網段，依照每個部門實際需要的主機數，切成好幾個大小不同的子網路——這就是 <b style="color:var(--text)">VLSM</b>（Variable Length Subnet Mask，可變長度子網路遮罩）。</p>
+        </div>
+
+        <h3 class="sub-h">題目：把 192.168.1.0/24 分給三個部門</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>部門</th><th>需要主機數</th></tr></thead>
+            <tbody>
+              <tr><td>業務部</td><td>100 台</td></tr>
+              <tr><td>研發部</td><td>50 台</td></tr>
+              <tr><td>管理網段</td><td>20 台</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-h">解法：由大到小切</h3>
+        <p class="sub-p">VLSM 的關鍵原則是<b>先切最大的需求</b>，避免小網段卡在中間浪費空間。</p>
+        <div class="table-wrap vlsm-table">
+          <table>
+            <thead><tr><th>部門</th><th>需求</th><th>對應 CIDR</th><th>切出的網段</th><th>可用範圍</th></tr></thead>
+            <tbody>
+              <tr><td>業務部</td><td>100 台</td><td class="code">/25（126 台）</td><td class="code">192.168.1.0/25</td><td class="code">.1 – .126</td></tr>
+              <tr><td>研發部</td><td>50 台</td><td class="code">/26（62 台）</td><td class="code">192.168.1.128/26</td><td class="code">.129 – .190</td></tr>
+              <tr><td>管理網段</td><td>20 台</td><td class="code">/27（30 台）</td><td class="code">192.168.1.192/27</td><td class="code">.193 – .222</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="formula-box">
+          <p class="formula-note" style="margin-top:0">
+            怎麼挑 CIDR？找出<b style="color:var(--text)">「2 的次方 − 2 ≥ 需求人數」</b>裡最小的那個：
+            100 台 → 2⁷−2=126 夠用，選 <b style="color:var(--text)">/25</b>；
+            50 台 → 2⁶−2=62 夠用，選 <b style="color:var(--text)">/26</b>；
+            20 台 → 2⁵−2=30 夠用，選 <b style="color:var(--text)">/27</b>。
+            每切完一段，下一段的起始位址就接著上一段的結尾繼續往後排。
+          </p>
+        </div>
+
+        <div class="callout link-out">
+          <h3>去虛擬終端機動手驗證</h3>
+          <p>把上面三個網段的第一個位址跟前綴長度，丟到「IP 位址計算」的互動計算機驗證看看，或是直接開虛擬終端機，用 <span class="code-inline" style="color:var(--c-addr)">ip addr add 192.168.1.129/25 dev eth0</span> 之類的指令實際下下看。</p>
+          <a class="go-btn" href="terminal.html">🖥 開啟虛擬終端機</a>
         </div>
       </section>
 
@@ -1190,7 +1310,6 @@ mustHave.forEach(cmd => {
   checklistHost.appendChild(el);
 });
 
-
 // ---------- exam points ----------
 const examPoints = [
   'ip 屬於 <b>iproute2</b> 套件。',
@@ -1200,6 +1319,8 @@ const examPoints = [
   '<b>link</b>：管理網卡。',
   '<b>neigh</b>：管理 ARP 快取。',
   '<b>ip a</b> 與 <b>ip r</b> 是最常使用的兩個指令。',
+  '私有 IP 三段：<b>10.0.0.0/8、172.16.0.0/12、192.168.0.0/16</b>。',
+  'VLSM 選 CIDR 的原則：<b>2ⁿ − 2 ≥ 需求主機數</b>，取最小的 n。',
 ];
 const pointsHost = document.getElementById('points');
 examPoints.forEach((text, i) => {
@@ -1314,12 +1435,13 @@ calcCidr();
 
 // ---------- nav active state ----------
 const navLinks = Array.from(document.querySelectorAll('#nav a'));
-const targets = navLinks.map(a => document.querySelector(a.getAttribute('href')));
+const anchorLinks = navLinks.filter(a => a.getAttribute('href').startsWith('#'));
+const targets = anchorLinks.map(a => document.querySelector(a.getAttribute('href')));
 const io = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting){
       const id = '#' + entry.target.id;
-      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === id));
+      anchorLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === id));
     }
   });
 }, { rootMargin: '-20% 0px -70% 0px' });
